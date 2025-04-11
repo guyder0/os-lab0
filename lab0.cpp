@@ -5,6 +5,13 @@
 #include "lab0.h"
 
 #define MAX_LOADSTRING 100
+#define ID_PUSHBUTTON 1001
+#define ID_CHECKBOX 1002
+#define ID_RADIOBUTTON1 1003
+#define ID_RADIOBUTTON2 1004
+#define ID_RADIOBUTTON3 1005
+#define POPUP_MENU_COLOR 2001
+#define POPUP_MENU_EXIT 2002
 
 // Глобальные переменные:
 HINSTANCE hInst;                                // текущий экземпляр
@@ -40,13 +47,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     winrect.right = bm.bmWidth;
     winrect.bottom = bm.bmHeight;
     AdjustWindowRect(&winrect, WS_OVERLAPPEDWINDOW, TRUE); // Корректирует размер с учётом стиля
+
     MyRegisterClass(hInstance);
 
     // Выполнить инициализацию приложения:
     if (!InitInstance (hInstance, nCmdShow))
     {
         return FALSE;
-    }
+    }   
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_LAB0));
 
@@ -105,6 +113,14 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
       return FALSE;
    }
 
+   HWND hPushButton = CreateWindow(L"BUTTON", L"START", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 10, 80, 30, hWnd, (HMENU)ID_PUSHBUTTON, hInstance, NULL);
+   HWND hCheckbox = CreateWindow(L"BUTTON", L"Нестандартный цвет фона", WS_CHILD | WS_VISIBLE | BS_CHECKBOX, 10, 50, 200, 30, hWnd, (HMENU)ID_CHECKBOX, hInstance, NULL);
+   HWND hStatic = CreateWindow(L"STATIC", L"Размер поля", WS_CHILD | WS_VISIBLE, 220, 10, 100, 20, hWnd, NULL, hInstance, NULL);
+   HWND hRadio1 = CreateWindow(L"BUTTON", L"3x3", WS_CHILD | WS_VISIBLE | WS_GROUP | BS_AUTORADIOBUTTON, 220, 40, 50, 20, hWnd, (HMENU)ID_RADIOBUTTON1, hInstance, NULL);
+   SendMessage(hRadio1, BM_SETCHECK, BST_CHECKED, 0);
+   HWND hRadio2 = CreateWindow(L"BUTTON", L"4x4", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 220, 70, 50, 20, hWnd, (HMENU)ID_RADIOBUTTON2, hInstance, NULL);
+   HWND hRadio3 = CreateWindow(L"BUTTON", L"5x5", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 220, 100, 50, 20, hWnd, (HMENU)ID_RADIOBUTTON3, hInstance, NULL);
+
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
 
@@ -118,13 +134,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
-            // Разобрать выбор в меню:
             switch (wmId)
             {
+            // обработка кнопок меню
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;
             case IDM_EXIT:
+                DestroyWindow(hWnd);
+                break;
+            // обработка popup меню
+            case POPUP_MENU_COLOR:
+                break;
+            case POPUP_MENU_EXIT:
                 DestroyWindow(hWnd);
                 break;
             default:
@@ -143,9 +165,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             EndPaint(hWnd, &ps);
         }
         break;
-    case WM_DESTROY:
+    case WM_RBUTTONUP: {
+        POINT pt;
+        GetCursorPos(&pt); // Получить позицию курсора в экранах координат
+
+        HMENU hPopup = CreatePopupMenu();
+        AppendMenu(hPopup, MF_STRING, POPUP_MENU_COLOR, L"Выбор цвета фона");
+        AppendMenu(hPopup, MF_SEPARATOR, 0, NULL);
+        AppendMenu(hPopup, MF_STRING, POPUP_MENU_EXIT, L"Выход");
+
+        TrackPopupMenu(hPopup, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hWnd, NULL);
+        DestroyMenu(hPopup);
+    }
+        break;
+    case WM_DESTROY: {
         DeleteObject(background);
         PostQuitMessage(0);
+    }
         break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
