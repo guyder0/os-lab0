@@ -1,8 +1,10 @@
-﻿// lab0.cpp : Определяет точку входа для приложения.
+﻿// lab0.cpp : Определяет 
+// точку входа для приложения.
 //
 
 #include "framework.h"
 #include "lab0.h"
+#include "game_window.h"
 
 #define MAX_LOADSTRING 100
 #define ID_PUSHBUTTON 1001
@@ -14,9 +16,11 @@
 #define POPUP_MENU_EXIT 2002
 
 // Глобальные переменные:
+HWND hWndChild;
 HINSTANCE hInst;                                // текущий экземпляр
 WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки заголовка
-WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна
+WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна 
+WCHAR szChildClass[MAX_LOADSTRING];             // имя класса окна-ребенка
 HBITMAP background;                             // битмап фона
 RECT winrect = {0, 0, 0, 0};                    // размер окна (подстроится далее под загружаемый битмап)
 
@@ -40,6 +44,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // Инициализация глобальных строк
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_LAB0, szWindowClass, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDC_CNAME, szChildClass, MAX_LOADSTRING);
     // инициализация битмапа фона
     background = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_BACKGROUND));
     BITMAP bm;
@@ -49,6 +54,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     AdjustWindowRect(&winrect, WS_OVERLAPPEDWINDOW, TRUE); // Корректирует размер с учётом стиля
 
     MyRegisterClass(hInstance);
+    RegisterChild(hInstance);
 
     // Выполнить инициализацию приложения:
     if (!InitInstance (hInstance, nCmdShow))
@@ -107,6 +113,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
       CW_USEDEFAULT, 0, winrect.right - winrect.left, winrect.bottom - winrect.top, nullptr, nullptr, hInstance, nullptr);
+   hWndChild = CreateWindowW(szChildClass, szChildClass, WS_CHILD | WS_CAPTION | WS_POPUP,
+       10, 10, 500, 500, hWnd, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
@@ -143,6 +151,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             case IDM_EXIT:
                 DestroyWindow(hWnd);
                 break;
+            // обработка кнопок управления
+            case ID_PUSHBUTTON:
+                ShowWindow(hWndChild, SW_SHOW);
+                break;
             // обработка popup меню
             case POPUP_MENU_COLOR:
                 break;
@@ -167,7 +179,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_RBUTTONUP: {
         POINT pt;
-        GetCursorPos(&pt); // Получить позицию курсора в экранах координат
+        GetCursorPos(&pt);
 
         HMENU hPopup = CreatePopupMenu();
         AppendMenu(hPopup, MF_STRING, POPUP_MENU_COLOR, L"Выбор цвета фона");
