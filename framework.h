@@ -13,3 +13,12 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
+struct MainElements {
+    HWND hPushButton;
+    HWND hCheckbox;
+    HWND hStatic;
+    HWND hRadio1;
+    HWND hRadio2;
+    HWND hRadio3;
+    COLORREF bgcolor;
+};

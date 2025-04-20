@@ -27,12 +27,15 @@
     <ClInclude Include="lab0.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="game_window.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lab0.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="game_window.h">
+    <ClCompile Include="game_window.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

@@ -15,8 +15,11 @@
 #define POPUP_MENU_COLOR 2001
 #define POPUP_MENU_EXIT 2002
 
+MainElements mainElements;
+
 // Глобальные переменные:
 HWND hWndChild;
+HWND hWndMain;
 HINSTANCE hInst;                                // текущий экземпляр
 WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки заголовка
 WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна 
@@ -112,22 +115,25 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    hInst = hInstance; // Сохранить маркер экземпляра в глобальной переменной
 
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-      CW_USEDEFAULT, 0, winrect.right - winrect.left, winrect.bottom - winrect.top, nullptr, nullptr, hInstance, nullptr);
-   hWndChild = CreateWindowW(szChildClass, szChildClass, WS_CHILD | WS_CAPTION | WS_POPUP,
-       10, 10, 500, 500, hWnd, nullptr, hInstance, nullptr);
+      CW_USEDEFAULT, 0, winrect.right, winrect.bottom, nullptr, nullptr, hInstance, nullptr);
+   winrect.right = 540;
+   winrect.bottom = 540;
+   AdjustWindowRect(&winrect, WS_OVERLAPPEDWINDOW, FALSE);
+   hWndChild = CreateWindowW(szChildClass, szChildClass, WS_CHILD | WS_CAPTION | WS_SYSMENU | WS_POPUP,
+       10, 10, winrect.right + 10, winrect.bottom + 35, hWnd, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
       return FALSE;
    }
 
-   HWND hPushButton = CreateWindow(L"BUTTON", L"START", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 10, 80, 30, hWnd, (HMENU)ID_PUSHBUTTON, hInstance, NULL);
-   HWND hCheckbox = CreateWindow(L"BUTTON", L"Нестандартный цвет фона", WS_CHILD | WS_VISIBLE | BS_CHECKBOX, 10, 50, 200, 30, hWnd, (HMENU)ID_CHECKBOX, hInstance, NULL);
-   HWND hStatic = CreateWindow(L"STATIC", L"Размер поля", WS_CHILD | WS_VISIBLE, 220, 10, 100, 20, hWnd, NULL, hInstance, NULL);
-   HWND hRadio1 = CreateWindow(L"BUTTON", L"3x3", WS_CHILD | WS_VISIBLE | WS_GROUP | BS_AUTORADIOBUTTON, 220, 40, 50, 20, hWnd, (HMENU)ID_RADIOBUTTON1, hInstance, NULL);
-   SendMessage(hRadio1, BM_SETCHECK, BST_CHECKED, 0);
-   HWND hRadio2 = CreateWindow(L"BUTTON", L"4x4", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 220, 70, 50, 20, hWnd, (HMENU)ID_RADIOBUTTON2, hInstance, NULL);
-   HWND hRadio3 = CreateWindow(L"BUTTON", L"5x5", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 220, 100, 50, 20, hWnd, (HMENU)ID_RADIOBUTTON3, hInstance, NULL);
+   mainElements.hPushButton = CreateWindow(L"BUTTON", L"START", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 10, 80, 30, hWnd, (HMENU)ID_PUSHBUTTON, hInstance, NULL);
+   mainElements.hCheckbox = CreateWindow(L"BUTTON", L"Нестандартный цвет фона", WS_CHILD | WS_VISIBLE | BS_CHECKBOX, 10, 50, 200, 30, hWnd, (HMENU)ID_CHECKBOX, hInstance, NULL);
+   mainElements.hStatic = CreateWindow(L"STATIC", L"Размер поля", WS_CHILD | WS_VISIBLE, 220, 10, 100, 20, hWnd, NULL, hInstance, NULL);
+   mainElements.hRadio1 = CreateWindow(L"BUTTON", L"3x3", WS_CHILD | WS_VISIBLE | WS_GROUP | BS_AUTORADIOBUTTON, 220, 40, 50, 20, hWnd, (HMENU)ID_RADIOBUTTON1, hInstance, NULL);
+   SendMessage(mainElements.hRadio1, BM_SETCHECK, BST_CHECKED, 0);
+   mainElements.hRadio2 = CreateWindow(L"BUTTON", L"6x6", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 220, 70, 50, 20, hWnd, (HMENU)ID_RADIOBUTTON2, hInstance, NULL);
+   mainElements.hRadio3 = CreateWindow(L"BUTTON", L"9x9", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 220, 100, 50, 20, hWnd, (HMENU)ID_RADIOBUTTON3, hInstance, NULL);
 
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
@@ -154,6 +160,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             // обработка кнопок управления
             case ID_PUSHBUTTON:
                 ShowWindow(hWndChild, SW_SHOW);
+                break;
+            case ID_CHECKBOX:
+                SendMessage(mainElements.hCheckbox, BM_SETCHECK,
+                    (SendMessage(mainElements.hCheckbox, BM_GETCHECK, 0, 0) == BST_CHECKED) ? BST_UNCHECKED : BST_CHECKED, 0);
                 break;
             // обработка popup меню
             case POPUP_MENU_COLOR:

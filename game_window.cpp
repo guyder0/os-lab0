@@ -5,14 +5,16 @@
 #include "framework.h"
 #include "Resource.h"
 
-#define GRID_SIZE 5
-#define CELL_SIZE 80
+int GRID_SIZE = 5;
+int CELL_SIZE = 80;
 
 POINT startPoint = { 0, 0 };
-POINT endPoint = { 4, 4 };
+POINT endPoint = { GRID_SIZE - 1, GRID_SIZE - 1 };
 
 std::vector<POINT> path;
 bool drawing = false;
+
+extern MainElements mainElements;
 
 // === Утилиты ===
 POINT GridFromPos(int x, int y) {
@@ -37,6 +39,30 @@ bool IsInPath(const POINT& pt) {
 // === Основная оконная процедура ===
 LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
+    case WM_SHOWWINDOW: // обрабатываем когда окно показывается
+        if (wParam == TRUE) {
+            if (SendMessage(mainElements.hRadio1, BM_GETCHECK, 0, 0) == BST_CHECKED) GRID_SIZE = 3;
+            if (SendMessage(mainElements.hRadio2, BM_GETCHECK, 0, 0) == BST_CHECKED) GRID_SIZE = 6;
+            if (SendMessage(mainElements.hRadio3, BM_GETCHECK, 0, 0) == BST_CHECKED) GRID_SIZE = 9;
+            endPoint = { GRID_SIZE - 1, GRID_SIZE - 1 };
+            CELL_SIZE = 540 / GRID_SIZE;
+        }
+        else {
+            path.clear();
+        }
+        break;
+    case WM_ERASEBKGND:
+    {
+        HDC hdc = (HDC)wParam;
+        RECT rect;
+        GetClientRect(hwnd, &rect);
+
+        HBRUSH hBrush = CreateSolidBrush(RGB(200, 200, 200));
+        FillRect(hdc, &rect, hBrush);
+        DeleteObject(hBrush);
+
+        break;
+    }
     case WM_LBUTTONDOWN: {
         POINT pt = GridFromPos(LOWORD(lParam), HIWORD(lParam));
         if (IsSamePoint(pt, startPoint)) {
@@ -69,10 +95,10 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if (drawing) {
             drawing = false;
             if (IsSamePoint(path.back(), endPoint)) {
-                MessageBox(hwnd, L"Головоломка решена!", L"The Witness Mini", MB_OK);
+                MessageBox(hwnd, L"Головоломка решена!", L"Итог", MB_OK);
             }
             else {
-                MessageBox(hwnd, L"Неправильный путь", L"The Witness Mini", MB_ICONERROR);
+                MessageBox(hwnd, L"Неправильный путь", L"Итог", MB_ICONERROR);
             }
         }
         break;
@@ -83,11 +109,23 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         HDC hdc = BeginPaint(hwnd, &ps);
 
         // Сетка
-        for (int y = 0; y < GRID_SIZE; ++y) {
+        /*for (int y = 0; y < GRID_SIZE; ++y) {
             for (int x = 0; x < GRID_SIZE; ++x) {
                 Rectangle(hdc,
                     x * CELL_SIZE, y * CELL_SIZE,
                     (x + 1) * CELL_SIZE, (y + 1) * CELL_SIZE);
+            }
+        }*/
+        for (int y = 0; y < GRID_SIZE; ++y) {
+            MoveToEx(hdc, CELL_SIZE / 2, y * CELL_SIZE + CELL_SIZE / 2, NULL);
+            for (int x = 0; x < GRID_SIZE; ++x) {
+                LineTo(hdc, x * CELL_SIZE + CELL_SIZE / 2, y * CELL_SIZE + CELL_SIZE / 2);
+            }
+        }
+        for (int x = 0; x < GRID_SIZE; ++x) {
+            MoveToEx(hdc, x * CELL_SIZE + CELL_SIZE / 2, CELL_SIZE / 2, NULL);
+            for (int y = 0; y < GRID_SIZE; ++y) {
+                LineTo(hdc, x * CELL_SIZE + CELL_SIZE / 2, y * CELL_SIZE + CELL_SIZE / 2);
             }
         }
 
@@ -95,13 +133,16 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         HBRUSH green = CreateSolidBrush(RGB(0, 255, 0));
         HBRUSH red = CreateSolidBrush(RGB(255, 0, 0));
 
-        RECT r1 = { startPoint.x * CELL_SIZE + 10, startPoint.y * CELL_SIZE + 10,
-                    (startPoint.x + 1) * CELL_SIZE - 10, (startPoint.y + 1) * CELL_SIZE - 10 };
+        RECT r1 = { startPoint.x * CELL_SIZE + CELL_SIZE / 3, startPoint.y * CELL_SIZE + CELL_SIZE / 3,
+                    (startPoint.x + 1) * CELL_SIZE - CELL_SIZE / 3, (startPoint.y + 1) * CELL_SIZE - CELL_SIZE / 3 };
         FillRect(hdc, &r1, green);
 
-        RECT r2 = { endPoint.x * CELL_SIZE + 10, endPoint.y * CELL_SIZE + 10,
-                    (endPoint.x + 1) * CELL_SIZE - 10, (endPoint.y + 1) * CELL_SIZE - 10 };
+        RECT r2 = { endPoint.x * CELL_SIZE + CELL_SIZE / 3, endPoint.y * CELL_SIZE + CELL_SIZE / 3,
+                    (endPoint.x + 1) * CELL_SIZE - CELL_SIZE / 3, (endPoint.y + 1) * CELL_SIZE - CELL_SIZE / 3 };
         FillRect(hdc, &r2, red);
+
+        HPEN hPen = CreatePen(PS_SOLID, CELL_SIZE / 6, RGB(127, 255, 212));
+        HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
 
         // Путь
         if (!path.empty()) {
@@ -111,18 +152,28 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
         }
 
+        SelectObject(hdc, hOldPen);
+
         DeleteObject(green);
         DeleteObject(red);
+        DeleteObject(hPen);
         EndPaint(hwnd, &ps);
         break;
     }
+               
+    case WM_CLOSE:
+        ShowWindow(hwnd, SW_HIDE);
+        break;
 
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
+
+    default:
+        return DefWindowProc(hwnd, msg, wParam, lParam);
+    return 0;
     }
 
-    return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
 ATOM RegisterChild(HINSTANCE hInstance) {
