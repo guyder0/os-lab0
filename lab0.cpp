@@ -5,6 +5,7 @@
 #include "framework.h"
 #include "lab0.h"
 #include "game_window.h"
+#include <commdlg.h>
 
 #define MAX_LOADSTRING 100
 #define ID_PUSHBUTTON 1001
@@ -166,7 +167,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     (SendMessage(mainElements.hCheckbox, BM_GETCHECK, 0, 0) == BST_CHECKED) ? BST_UNCHECKED : BST_CHECKED, 0);
                 break;
             // обработка popup меню
-            case POPUP_MENU_COLOR:
+            case POPUP_MENU_COLOR: {
+                COLORREF acrCustClr[16] = { 0 };
+                CHOOSECOLOR cc = { 0 };
+                cc.lStructSize = sizeof(cc);
+                cc.hwndOwner = NULL;
+                cc.lpCustColors = acrCustClr;
+                cc.rgbResult = RGB(255, 0, 0);
+                cc.Flags = CC_FULLOPEN | CC_RGBINIT;
+                if (ChooseColor(&cc)) mainElements.bgcolor = cc.rgbResult;
+            }
                 break;
             case POPUP_MENU_EXIT:
                 DestroyWindow(hWnd);

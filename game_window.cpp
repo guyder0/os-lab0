@@ -15,6 +15,7 @@ std::vector<POINT> path;
 bool drawing = false;
 
 extern MainElements mainElements;
+COLORREF bgcolor;
 
 // === Утилиты ===
 POINT GridFromPos(int x, int y) {
@@ -46,6 +47,8 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             if (SendMessage(mainElements.hRadio3, BM_GETCHECK, 0, 0) == BST_CHECKED) GRID_SIZE = 9;
             endPoint = { GRID_SIZE - 1, GRID_SIZE - 1 };
             CELL_SIZE = 540 / GRID_SIZE;
+            if (SendMessage(mainElements.hCheckbox, BM_GETCHECK, 0, 0) == BST_CHECKED) bgcolor = mainElements.bgcolor;
+            else bgcolor = RGB(255, 255, 255);
         }
         else {
             path.clear();
@@ -57,7 +60,7 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         RECT rect;
         GetClientRect(hwnd, &rect);
 
-        HBRUSH hBrush = CreateSolidBrush(RGB(200, 200, 200));
+        HBRUSH hBrush = CreateSolidBrush(bgcolor);
         FillRect(hdc, &rect, hBrush);
         DeleteObject(hBrush);
 
