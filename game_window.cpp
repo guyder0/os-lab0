@@ -98,10 +98,10 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if (drawing) {
             drawing = false;
             if (IsSamePoint(path.back(), endPoint)) {
-                MessageBox(hwnd, L"Головоломка решена!", L"Итог", MB_OK);
+                MessageBox(hwnd, mainElements.win_text, L"Итог", MB_OK);
             }
             else {
-                MessageBox(hwnd, L"Неправильный путь", L"Итог", MB_ICONERROR);
+                MessageBox(hwnd, mainElements.lose_text, L"Итог", MB_ICONERROR);
             }
         }
         break;

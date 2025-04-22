@@ -21,4 +21,6 @@ struct MainElements {
     HWND hRadio2;
     HWND hRadio3;
     COLORREF bgcolor;
+    wchar_t win_text[256] = L"Вы победили!";
+    wchar_t lose_text[256] = L"Вы проиграли.";
 };

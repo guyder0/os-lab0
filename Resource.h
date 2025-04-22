@@ -13,6 +13,10 @@
 #define IDI_SMALL           108
 #define IDC_LAB0			109
 #define IDC_CNAME 110
+#define IDC_EDIT 111
+#define IDC_LISTBOX 112
+#define IDC_COMBOBOX 113
+#define IDD_MAIN_DIALOG 114
 //#define IDC_MYICON				2
 #ifndef IDC_STATIC
 #define IDC_STATIC				-1

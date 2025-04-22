@@ -13,8 +13,13 @@
 #define ID_RADIOBUTTON1 1003
 #define ID_RADIOBUTTON2 1004
 #define ID_RADIOBUTTON3 1005
+#define ID_SCROLL 1006
+#define ID_EDIT 1007
+#define ID_LISTBOX 1008
+#define ID_COMBOBOX 1009
 #define POPUP_MENU_COLOR 2001
-#define POPUP_MENU_EXIT 2002
+#define POPUP_MENU_TEXT 2002
+#define POPUP_MENU_EXIT 2003
 
 MainElements mainElements;
 
@@ -34,6 +39,7 @@ ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK  DlgProc(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -115,7 +121,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // Сохранить маркер экземпляра в глобальной переменной
 
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VSCROLL,
       CW_USEDEFAULT, 0, winrect.right, winrect.bottom, nullptr, nullptr, hInstance, nullptr);
    winrect.right = 540;
    winrect.bottom = 540;
@@ -178,6 +184,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 if (ChooseColor(&cc)) mainElements.bgcolor = cc.rgbResult;
             }
                 break;
+            case POPUP_MENU_TEXT:
+                DialogBox(hInst, MAKEINTRESOURCE(IDD_MAIN_DIALOG), hWnd, DlgProc);
+                break;
             case POPUP_MENU_EXIT:
                 DestroyWindow(hWnd);
                 break;
@@ -185,6 +194,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 return DefWindowProc(hWnd, message, wParam, lParam);
             }
         }
+        break;
+    case WM_VSCROLL: {
+        int pos = GetScrollPos(hWnd, SB_VERT);
+        switch (LOWORD(wParam))
+        {
+        case SB_LINEUP:     pos--; break;
+        case SB_LINEDOWN:   pos++; break;
+        case SB_PAGEUP:     pos -= 5; break;
+        case SB_PAGEDOWN:   pos += 5; break;
+        case SB_THUMBTRACK: pos = HIWORD(wParam); break;
+        }
+        SetScrollPos(hWnd, SB_VERT, pos, TRUE);
+    }
         break;
     case WM_PAINT:
         {
@@ -203,6 +225,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         HMENU hPopup = CreatePopupMenu();
         AppendMenu(hPopup, MF_STRING, POPUP_MENU_COLOR, L"Выбор цвета фона");
+        AppendMenu(hPopup, MF_STRING, POPUP_MENU_TEXT, L"Выбор сообщений выигрыша/проигрыша");
         AppendMenu(hPopup, MF_SEPARATOR, 0, NULL);
         AppendMenu(hPopup, MF_STRING, POPUP_MENU_EXIT, L"Выход");
 
@@ -236,6 +259,49 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             EndDialog(hDlg, LOWORD(wParam));
             return (INT_PTR)TRUE;
         }
+        break;
+    }
+    return (INT_PTR)FALSE;
+}
+
+INT_PTR CALLBACK DlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    UNREFERENCED_PARAMETER(lParam);
+    wchar_t list[2][256] = {L"текст 1", L"текст 2"};
+    switch (message) {
+    case WM_INITDIALOG: {
+        SendDlgItemMessage(hWnd, IDC_EDIT, WM_SETTEXT, 256, (LPARAM)mainElements.win_text);
+
+        SendDlgItemMessage(hWnd, IDC_LISTBOX, LB_ADDSTRING, 0, (LPARAM)list[0]);
+        SendDlgItemMessage(hWnd, IDC_LISTBOX, LB_ADDSTRING, 0, (LPARAM)list[1]);
+
+        SendDlgItemMessage(hWnd, IDC_COMBOBOX, CB_ADDSTRING, 0, (LPARAM)list[0]);
+        SendDlgItemMessage(hWnd, IDC_COMBOBOX, CB_ADDSTRING, 0, (LPARAM)list[1]);
+        return (INT_PTR)TRUE;
+    }
+    case WM_COMMAND:
+    {
+        int wmId = LOWORD(wParam);
+        switch (wmId) {
+        case IDC_LISTBOX: {
+            int index = (int)SendDlgItemMessage(hWnd, IDC_LISTBOX, LB_GETCURSEL, 0, 0);
+            SendDlgItemMessage(hWnd, IDC_LISTBOX, LB_GETTEXT, index, (LPARAM)mainElements.win_text);
+        }
+            break;
+        case IDC_EDIT:
+            if (HIWORD(wParam) == EN_CHANGE) {
+                SendDlgItemMessage(hWnd, IDC_EDIT, WM_GETTEXT, 256, (LPARAM)mainElements.win_text);
+            }
+            break;
+        case IDC_COMBOBOX:
+            GetDlgItemText(hWnd, IDC_COMBOBOX, mainElements.lose_text, 256);
+            break;
+        case IDCANCEL: {
+            EndDialog(hWnd, LOWORD(wParam));
+            return (INT_PTR)TRUE;
+        }
+            break;
+        }
+    }
         break;
     }
     return (INT_PTR)FALSE;
